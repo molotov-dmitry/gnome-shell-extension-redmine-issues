@@ -1,1 +1,8 @@
 *.zip
+*.cflags
+*.config
+*.creator.user
+*.creator.user.*
+*.cxxflags
+*.includes
+*.zip
