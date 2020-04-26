@@ -180,12 +180,9 @@ const RedmineIssues = GObject.registerClass(class RedmineIssues_RedmineIssues ex
         this.commands = new Commands.Commands();
         this.commands.setMinWidth(this._settings.get_int('min-menu-item-width'));
 
-        this.commands.addIssueButton.connect('clicked', Lang.bind(this, this._addIssueClicked));
         this.commands.preferencesButton.connect('clicked', Lang.bind(this, this._openAppPreferences));
         this.commands.refreshButton.connect('clicked', Lang.bind(this, this._refreshButtonClicked));
-        this.commands.removeAllButton.connect('clicked', Lang.bind(this, this._removeAllClicked));
         this.commands.markAllReadButton.connect('clicked', Lang.bind(this, this._markAllReadClicked));
-        this.commands.cleanIgnoreListButton.connect('clicked', Lang.bind(this, this._cleanIgnoreListClicked));
 
         this.menu.addMenuItem(this.commands.commandMenuItem);
     }
@@ -195,38 +192,6 @@ const RedmineIssues = GObject.registerClass(class RedmineIssues_RedmineIssues ex
             return;
         }
         this._refresh();
-    }
-
-    _cleanIgnoreListClicked(){
-        let confirmDialog = new ConfirmDialog.ConfirmDialog(
-            _('Clean ignore list'),
-            _('Are you sure you want to remove all issues from ignore list?'),
-            Lang.bind(this, function() {
-                this._issuesStorage.cleanIgnoreList();
-            })
-        );
-        this.menu.close();
-        confirmDialog.open();
-    }
-
-    _removeAllIssues(){
-        for(let issueId in this._issuesStorage.issues){
-            this._removeIssueMenuItem(this._issuesStorage.issues[issueId]);
-        }
-        this._issuesStorage.removeAll();
-    }
-
-    _removeAllClicked(){
-        let confirmDialog = new ConfirmDialog.ConfirmDialog(
-            _('Delete all issues'),
-            _('Are you sure you want to delete all issues?'),
-            Lang.bind(this, function() {
-                this._removeAllIssues();
-                this._issuesStorage.save();
-            })
-        );
-        this.menu.close();
-        confirmDialog.open();
     }
 
     _markAllReadClicked(){
@@ -481,22 +446,6 @@ const RedmineIssues = GObject.registerClass(class RedmineIssues_RedmineIssues ex
             item.makeUnread(newIssue);
             this._refreshGroupStyleClass(oldGroupKey);
         }
-    }
-
-    _addIssueClicked() {
-        let addIssueDialog = new AddIssueDialog.AddIssueDialog(Lang.bind(this, function(issueId){
-            if(!issueId)
-                return;
-            this._loadIssue(issueId, Lang.bind(this, function(issue) {
-                issue.ri_bookmark=true;
-                if(this._issuesStorage.addIssue(issue, true)) {
-                    this._addIssueMenuItem(issue);
-                    this._issuesStorage.save();
-                }
-            }));
-        }));
-        this.menu.close();
-        addIssueDialog.open();
     }
 
     _removeIssueClicked(issue){
