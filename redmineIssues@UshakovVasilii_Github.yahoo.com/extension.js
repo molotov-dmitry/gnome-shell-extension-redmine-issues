@@ -27,7 +27,7 @@ const _ = Gettext.gettext;
 
 let redmineIssues = null;
 
-const RISource = class extends MessageTray.Source {
+const RISource = GObject.registerClass(class extends MessageTray.Source {
 
     createIcon(size) {
         return new St.Icon({
@@ -36,7 +36,7 @@ const RISource = class extends MessageTray.Source {
         });
     }
 
-};
+});
 
 
 const RedmineIssues = GObject.registerClass(class RedmineIssues_RedmineIssues extends PanelMenu.Button {
