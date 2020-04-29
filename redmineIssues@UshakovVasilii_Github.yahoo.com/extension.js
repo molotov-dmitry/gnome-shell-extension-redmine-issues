@@ -448,23 +448,6 @@ const RedmineIssues = GObject.registerClass(class RedmineIssues_RedmineIssues ex
         }
     }
 
-    _removeIssueClicked(issue){
-        let message = issue.ri_bookmark ?
-            _('Are you sure you want to delete "%s"?').format(issue.subject) :
-            _('Are you sure you want to delete "%s"?\nIssue will be added to ignore list').format(issue.subject)
-        let confirmDialog = new ConfirmDialog.ConfirmDialog(
-            _('Delete #%s').format(issue.id),
-            message,
-            Lang.bind(this, function() {
-                this._issuesStorage.removeIssue(issue.id, !issue.ri_bookmark);
-                this._removeIssueMenuItem(issue);
-                this._issuesStorage.save();
-            })
-        );
-        this.menu.close();
-        confirmDialog.open();
-    }
-
     _removeIssueMenuItem(issue){
         let groupBy = this._settings.get_string('group-by');
 
@@ -489,9 +472,6 @@ const RedmineIssues = GObject.registerClass(class RedmineIssues_RedmineIssues ex
             this._issuesStorage.updateIssueToRead(item.issueId);
             this._makeMenuItemRead(item);
             this._issuesStorage.save();
-        }));
-        item.removeIssueButton.connect('clicked', Lang.bind(this, function(){
-            this._removeIssueClicked(issue);
         }));
         item.menuItem.connect('activate', Lang.bind(this, function(){
             this._issueItemAtivated(item);

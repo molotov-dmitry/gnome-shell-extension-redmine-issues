@@ -44,11 +44,6 @@ const IssueItem = class {
                                 style_class: 'ri-issue-icon'})
         });
         this._buttonBox.add(this.bookmarkButton);
-
-        this.removeIssueButton = new St.Button({
-            child: new St.Icon({icon_name: 'list-remove-symbolic', style_class: 'ri-issue-icon'})
-        });
-        this._buttonBox.add(this.removeIssueButton);
     }
 
     refreshBookmarkButton(ri_bookmark){
