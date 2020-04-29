@@ -16,10 +16,7 @@ Soup.Session.prototype.add_feature.call(session, new Soup.ProxyResolverDefault()
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Сonstants = Me.imports.constants;
-const AddIssueDialog = Me.imports.addIssueDialog;
-const ConfirmDialog = Me.imports.confirmDialog;
 const IssueStorage = Me.imports.issueStorage;
-const Commands = Me.imports.commands;
 const IssueItem = Me.imports.issueItem;
 
 const Gettext = imports.gettext.domain(Me.metadata['gettext-domain']);
@@ -63,14 +60,11 @@ const RedmineIssues = GObject.registerClass(class RedmineIssues_RedmineIssues ex
 
         this._addIssueMenuItems();
 
-        this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+        this.separator = new PopupMenu.PopupSeparatorMenuItem()
+        this.menu.addMenuItem(this.separator);
+        this.setMinWidth(this._settings.get_int('min-menu-item-width'));
 
         this._checkMainPrefs();
-
-        this.menu.connect('open-state-changed', Lang.bind(this, function(){
-            if(this.commands)
-                this.commands.sync();
-        }));
 
         this._settingChangedSignals = [];
         this.connect('destroy', Lang.bind(this, this._onDestroy));
@@ -101,16 +95,12 @@ const RedmineIssues = GObject.registerClass(class RedmineIssues_RedmineIssues ex
         this._isMainPrefsValid = !(!apiAccessKey || !redmineUrl || redmineUrl=='http://');
         if(!hasIssues && !this._isMainPrefsValid){
             if(!this.helpMenuItem) {
-                if(this.commands){
-                    this.commands.destroy();
-                    this.commands = null;
-                }
 
                 this.helpMenuItem = new PopupMenu.PopupMenuItem(_('You should input "Api Access Key" and "Redmine URL"'));
                 this.helpMenuItem.connect('activate', this._openAppPreferences);
                 this.menu.addMenuItem(this.helpMenuItem);
             }
-        } else if(!this.commands) {
+        } else {
             if(this.helpMenuItem) {
                 this.helpMenuItem.destroy();
                 this.helpMenuItem = null;
@@ -156,7 +146,7 @@ const RedmineIssues = GObject.registerClass(class RedmineIssues_RedmineIssues ex
     }
 
     _minMenuItemWidthChanged(){
-        this.commands.setMinWidth(this._settings.get_int('min-menu-item-width'));
+        this.setMinWidth(this._settings.get_int('min-menu-item-width'));
     }
 
     _addIssueMenuItems(){
@@ -177,14 +167,18 @@ const RedmineIssues = GObject.registerClass(class RedmineIssues_RedmineIssues ex
     }
 
     _addCommandMenuItem(){
-        this.commands = new Commands.Commands();
-        this.commands.setMinWidth(this._settings.get_int('min-menu-item-width'));
 
-        this.commands.preferencesButton.connect('clicked', Lang.bind(this, this._openAppPreferences));
-        this.commands.refreshButton.connect('clicked', Lang.bind(this, this._refreshButtonClicked));
-        this.commands.markAllReadButton.connect('clicked', Lang.bind(this, this._markAllReadClicked));
+        this.updateButton = new PopupMenu.PopupImageMenuItem(_('Update all'), 'view-refresh-symbolic');
+        this.updateButton.connect('activate', Lang.bind(this, this._refreshButtonClicked));
+        this.menu.addMenuItem(this.updateButton);
 
-        this.menu.addMenuItem(this.commands.commandMenuItem);
+        this.readAllButton = new PopupMenu.PopupImageMenuItem(_('Mark all read'), 'mail-mark-read-symbolic');
+        this.readAllButton.connect('activate', Lang.bind(this, this._markAllReadClicked));
+        this.menu.addMenuItem(this.readAllButton);
+
+        this.prefsButton = new PopupMenu.PopupImageMenuItem(_('Preferences'), 'preferences-system-symbolic');
+        this.prefsButton.connect('activate', Lang.bind(this, this._openAppPreferences));
+        this.menu.addMenuItem(this.prefsButton);
     }
 
     _refreshButtonClicked(){
@@ -203,6 +197,10 @@ const RedmineIssues = GObject.registerClass(class RedmineIssues_RedmineIssues ex
             }
         }
         this._issuesStorage.save();
+    }
+
+    setMinWidth(width){
+        this.separator.actor.style = 'min-width:' + width + 'px';
     }
 
     _onDestroy(){
@@ -240,7 +238,10 @@ const RedmineIssues = GObject.registerClass(class RedmineIssues_RedmineIssues ex
             }
         }
 
-        this.commands.refreshButton.child.icon_name ='content-loading-symbolic';
+        if (this.updateButton)
+        {
+            this.updateButton.setIcon('content-loading-symbolic');
+        }
 
         let filters = []
         let srcFilters = this._settings.get_strv('filters');
@@ -401,8 +402,11 @@ const RedmineIssues = GObject.registerClass(class RedmineIssues_RedmineIssues ex
         }
 
         this._issuesStorage.save();
-        if(this.commands.refreshButton.child) // for disabled state
-            this.commands.refreshButton.child.icon_name ='view-refresh-symbolic';
+
+        if (this.updateButton)
+        {
+            this.updateButton.setIcon('view-refresh-symbolic');
+        }
     }
 
     _buildRedmineUrl(){
