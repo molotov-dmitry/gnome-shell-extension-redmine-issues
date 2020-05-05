@@ -24,24 +24,10 @@ const _ = Gettext.gettext;
 
 let redmineIssues = null;
 
-const RISource = GObject.registerClass(class extends MessageTray.Source {
-
-    createIcon(size) {
-        return new St.Icon({
-            gicon: Gio.icon_new_for_string(Me.path + '/icons/redmine-issues-symbolic.svg'),
-            icon_size: size
-        });
-    }
-
-});
-
-
 const RedmineIssues = GObject.registerClass(class RedmineIssues_RedmineIssues extends PanelMenu.Button {
 
     _init() {
         super._init(St.Align.START);
-
-        this._source = new RISource(_('Redmine Issues'));
 
         this._settings = ExtensionUtils.getSettings();
 
@@ -205,7 +191,6 @@ const RedmineIssues = GObject.registerClass(class RedmineIssues_RedmineIssues ex
 
     _onDestroy(){
         this._debug('Destroy');
-        this._source.destroy();
         let settings = this._settings;
         this._settingChangedSignals.forEach(function(signal){
             settings.disconnect(signal);
@@ -365,10 +350,12 @@ const RedmineIssues = GObject.registerClass(class RedmineIssues_RedmineIssues ex
         }));
     }
 
-    _notify(message, details){
-        if(!Main.messageTray.contains(this._source))
-            Main.messageTray.add(this._source);
-        this._source.notify(new MessageTray.Notification(this._source, message, details));
+    _notify(message, details)
+    {
+        let source = new MessageTray.Source(_('Redmine Issues'), 'dialog-information-symbolic');
+        Main.messageTray.add(source);
+        let notification = new MessageTray.Notification(source, message, details, {gicon: Gio.icon_new_for_string(Me.path + '/icons/redmine-issues-symbolic.svg')});
+        source.showNotification(notification);
     }
 
     _continueOrFinishIssueLoading(id){
