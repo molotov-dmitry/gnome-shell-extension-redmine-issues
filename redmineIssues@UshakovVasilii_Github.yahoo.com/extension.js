@@ -254,10 +254,16 @@ const RedmineIssues = GObject.registerClass(class RedmineIssues_RedmineIssues ex
         }
     }
 
-    _addOrRefreshIssue(issue){
-        if(this._issuesStorage.addIssue(issue)) {
+    _addOrRefreshIssue(issue)
+    {
+        if (this._issuesStorage.addIssue(issue))
+        {
+            let url = this._buildRedmineUrl() + 'issues/' + issue.id;
+            this._notify(_('%s').format(issue.project.name), _('%s\n%s').format(issue.subject, url));
             this._addIssueMenuItem(issue);
-        } else {
+        }
+        else
+        {
             this._refreshIssueMenuItem(issue);
         }
     }
